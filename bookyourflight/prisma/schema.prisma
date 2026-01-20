@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(cuid())
+  clerkId       String        @unique
+  email         String        @unique
+  firstName     String?
+  lastName      String?
+  role          UserRole      @default(USER)
+
+  reservations  Reservation[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([clerkId])
+  @@index([email])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model Resource {
+  id              String        @id @default(cuid())
+  name            String
+  description     String        @db.Text
+  type            String
+
+  availableSlots  Int
+  maxSlots        Int
+
+  priceInCents    Int
+  currency        String        @default("EUR")
+
+  minDuration     Int?
+  maxDuration     Int?
+
+  metadata        Json
+
+  isActive        Boolean       @default(true)
+
+  reservations    Reservation[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([isActive])
+  @@index([type])
+}
+
+model Reservation {
+  id              String            @id @default(cuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  resourceId      String
+  resource        Resource          @relation(fields: [resourceId], references: [id])
+
+  startTime       DateTime
+  endTime         DateTime
+
+  status          ReservationStatus @default(PENDING_PAYMENT)
+
+  passengerCount  Int               @default(1)
+  passengerData   Json
+
+  confirmedAt     DateTime?
+  cancelledAt     DateTime?
+  cancellationReason String?
+
+  payment         Payment?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([resourceId])
+  @@index([status])
+  @@index([startTime])
+}
+
+enum ReservationStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  PAYMENT_FAILED
+  EXPIRED
+}
+
+model Payment {
+  id                    String    @id @default(cuid())
+  reservationId         String    @unique
+  reservation           Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  stripePaymentIntentId String    @unique
+  stripeCheckoutSessionId String  @unique
+  stripeChargeId        String?   @unique
+
+  amount                Decimal   @db.Decimal(10, 2)
+  currency              String
+
+  status                PaymentStatus @default(PENDING)
+
+  refundStripeId        String?
+  refundedAmount        Decimal?  @db.Decimal(10, 2)
+  refundedAt            DateTime?
+  refundReason          String?
+
+  metadata              Json
+  paidAt                DateTime?
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([status])
+  @@index([stripeCheckoutSessionId])
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  REFUND_INITIATED
+  REFUNDED
+  FAILED
+}
+
+model WebhookEvent {
+  id            String    @id @default(cuid())
+  eventId       String    @unique
+  eventType     String
+
+  status        WebhookStatus @default(PENDING)
+  attempts      Int       @default(0)
+
+  payload       Json
+  error         String?   @db.Text
+
+  processedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([status])
+  @@index([eventType])
+}
+
+enum WebhookStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+model EmailLog {
+  id            String    @id @default(cuid())
+  recipientEmail String
+  emailType     String
+
+  status        EmailStatus @default(PENDING)
+  brevoMessageId String?
+
+  subject       String
+  metadata      Json
+
+  sentAt        DateTime?
+  error         String?   @db.Text
+
+  createdAt     DateTime  @default(now())
+
+  @@index([status])
+  @@index([emailType])
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
