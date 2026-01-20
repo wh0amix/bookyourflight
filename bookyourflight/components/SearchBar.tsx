@@ -1,5 +1,4 @@
-'use client';
-
+"use client";
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Plane, MapPin, Calendar, Users, ChevronDown } from 'lucide-react';

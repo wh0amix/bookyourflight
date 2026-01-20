@@ -1,5 +1,4 @@
-'use client';
-
+"use client";
 import { motion } from 'motion/react';
 import { Star, Quote } from 'lucide-react';
 
