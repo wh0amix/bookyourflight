@@ -8,8 +8,16 @@
     "start": "next start",
     "lint": "eslint"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
+    "@clerk/nextjs": "^6.36.8",
+    "@prisma/client": "5.22.0",
+    "lucide-react": "^0.562.0",
+    "motion": "^12.27.3",
     "next": "16.1.4",
+    "prisma": "5.22.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
@@ -21,6 +29,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

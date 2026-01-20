@@ -36,3 +36,9 @@ yarn-error.log*
 next-env.d.ts
 
 /generated/prisma
+
+.claude/
+
+Cahier des charges – Système de réservation en ligne.pdf
+
+interface_to_implement/
