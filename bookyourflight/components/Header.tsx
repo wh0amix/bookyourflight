@@ -26,6 +26,7 @@ export function Header() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
+          <Link href="/resources" className="text-sm hover:text-orange-500 transition-colors">Vols</Link>
           <a href="#destinations" className="text-sm hover:text-orange-500 transition-colors">Destinations</a>
           <a href="#features" className="text-sm hover:text-orange-500 transition-colors">Features</a>
           <a href="#about" className="text-sm hover:text-orange-500 transition-colors">About</a>
@@ -50,10 +51,18 @@ export function Header() {
                     <LayoutDashboard className="w-4 h-4" />
                     Dashboard
                   </Link>
+                  <Link
+                    href="/reservations"
+                    className="flex items-center gap-2 px-4 py-3 hover:bg-zinc-800 transition-colors text-sm"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Mes réservations
+                  </Link>
                   {user?.publicMetadata?.role === 'ADMIN' && (
                     <Link
                       href="/admin/dashboard"
-                      className="flex items-center gap-2 px-4 py-3 hover:bg-zinc-800 transition-colors text-sm"
+                      className="flex items-center gap-2 px-4 py-3 hover:bg-zinc-800 transition-colors text-sm border-t border-zinc-800"
                       onClick={() => setShowMenu(false)}
                     >
                       <LayoutDashboard className="w-4 h-4 text-orange-500" />

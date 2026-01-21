@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding database...');
+  console.log('Seeding database...');
 
   const testAdminClerkId = 'user_test_admin_001';
   const testUserClerkId = 'user_test_user_001';
@@ -20,7 +20,7 @@ async function main() {
     },
   });
 
-  console.log('✅ Admin user created:', admin.email);
+  console.log('Admin user created:', admin.email);
 
   const user = await prisma.user.upsert({
     where: { clerkId: testUserClerkId },
@@ -34,7 +34,7 @@ async function main() {
     },
   });
 
-  console.log('✅ Regular user created:', user.email);
+  console.log('Regular user created:', user.email);
 
   const flights = [
     {
@@ -209,7 +209,7 @@ async function main() {
     },
   ];
 
-  console.log('✈️  Creating flights...');
+  console.log(' Creating flights...');
 
   for (const flight of flights) {
     const created = await prisma.resource.upsert({
@@ -220,15 +220,15 @@ async function main() {
         ...flight,
       },
     });
-    console.log(`  ✅ ${created.name}`);
+    console.log(` ${created.name}`);
   }
 
-  console.log('🎉 Seeding completed successfully!');
+  console.log('Seeding completed successfully!');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error seeding database:', e);
+    console.error('Error seeding database:', e);
     process.exit(1);
   })
   .finally(async () => {
