@@ -20,6 +20,7 @@ export function Header() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
+          <Link href="/resources" className="text-sm hover:text-orange-500 transition-colors">Vols</Link>
           <a href="#destinations" className="text-sm hover:text-orange-500 transition-colors">Destinations</a>
           <a href="#features" className="text-sm hover:text-orange-500 transition-colors">Features</a>
           <a href="#about" className="text-sm hover:text-orange-500 transition-colors">About</a>
