@@ -17,6 +17,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "BookYourFlight - Réservation de vols",
   description: "Réservez vos vols en toute simplicité avec paiement sécurisé",
+  icons: {
+    icon: '/bookyourflight.png',
+    apple: '/bookyourflight.png',
+  },
 };
 
 export default function RootLayout({
