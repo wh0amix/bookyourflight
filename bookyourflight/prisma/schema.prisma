@@ -98,7 +98,7 @@ model Payment {
   reservationId         String    @unique
   reservation           Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
 
-  stripePaymentIntentId String    @unique
+  stripePaymentIntentId String?   @unique
   stripeCheckoutSessionId String  @unique
   stripeChargeId        String?   @unique
 

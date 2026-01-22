@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
     });
 
     const isTestMode = process.env.NEXT_PUBLIC_STRIPE_TEST_MODE === 'true';
+    console.log('Creating checkout - Test mode:', isTestMode);
     let checkoutUrl: string;
     let sessionId: string;
     let paymentIntentId: string;
@@ -70,6 +71,8 @@ export async function POST(req: NextRequest) {
       paymentIntentId = `test_pi_${Math.random().toString(36).substring(7)}`;
       checkoutUrl = `${process.env.NEXT_PUBLIC_API_URL}/reservations/success?session_id=${sessionId}`;
     } else {
+      console.log('Creating Stripe checkout session...');
+      console.log('Stripe key configured:', !!process.env.STRIPE_SECRET_KEY);
       const checkoutSession = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         mode: 'payment',
@@ -128,10 +131,20 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating checkout:', error);
+    console.error('Error details:', {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+      stack: error.stack,
+    });
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      {
+        error: 'Failed to create checkout session',
+        details: error.message || String(error),
+        type: error.type,
+      },
       { status: 500 }
     );
   }
