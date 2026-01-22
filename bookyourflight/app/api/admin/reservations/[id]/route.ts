@@ -1,0 +1,158 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/auth/roles';
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await requireAdmin();
+    const { id } = await params;
+    const body = await req.json();
+    const { action } = body;
+
+    const reservation = await prisma.reservation.findUnique({
+      where: { id },
+      include: {
+        resource: true,
+        payment: true,
+      },
+    });
+
+    if (!reservation) {
+      return NextResponse.json({ error: 'Reservation not found' }, { status: 404 });
+    }
+
+    switch (action) {
+      case 'confirm': {
+        if (reservation.status === 'CONFIRMED') {
+          return NextResponse.json({ error: 'Already confirmed' }, { status: 400 });
+        }
+
+        await prisma.$transaction(async (tx) => {
+          await tx.reservation.update({
+            where: { id },
+            data: {
+              status: 'CONFIRMED',
+              confirmedAt: new Date(),
+            },
+          });
+
+          if (reservation.payment) {
+            await tx.payment.update({
+              where: { id: reservation.payment.id },
+              data: {
+                status: 'COMPLETED',
+                paidAt: new Date(),
+              },
+            });
+          }
+
+          await tx.resource.update({
+            where: { id: reservation.resourceId },
+            data: {
+              availableSlots: {
+                decrement: reservation.passengerCount,
+              },
+            },
+          });
+        });
+
+        return NextResponse.json({ message: 'Reservation confirmed' }, { status: 200 });
+      }
+
+      case 'cancel': {
+        if (reservation.status === 'CANCELLED') {
+          return NextResponse.json({ error: 'Already cancelled' }, { status: 400 });
+        }
+
+        await prisma.$transaction(async (tx) => {
+          await tx.reservation.update({
+            where: { id },
+            data: {
+              status: 'CANCELLED',
+              cancelledAt: new Date(),
+              cancellationReason: body.reason || 'Cancelled by admin',
+            },
+          });
+
+          if (reservation.status === 'CONFIRMED') {
+            await tx.resource.update({
+              where: { id: reservation.resourceId },
+              data: {
+                availableSlots: {
+                  increment: reservation.passengerCount,
+                },
+              },
+            });
+          }
+
+          if (reservation.payment && reservation.payment.status === 'COMPLETED') {
+            await tx.payment.update({
+              where: { id: reservation.payment.id },
+              data: {
+                status: 'REFUND_INITIATED',
+              },
+            });
+          }
+        });
+
+        return NextResponse.json({ message: 'Reservation cancelled' }, { status: 200 });
+      }
+
+      default:
+        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    }
+  } catch (error: any) {
+    console.error('Error updating reservation:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to update reservation' },
+      { status: error.message?.includes('Unauthorized') ? 403 : 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await requireAdmin();
+    const { id } = await params;
+
+    const reservation = await prisma.reservation.findUnique({
+      where: { id },
+      include: { resource: true },
+    });
+
+    if (!reservation) {
+      return NextResponse.json({ error: 'Reservation not found' }, { status: 404 });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      if (reservation.status === 'CONFIRMED') {
+        await tx.resource.update({
+          where: { id: reservation.resourceId },
+          data: {
+            availableSlots: {
+              increment: reservation.passengerCount,
+            },
+          },
+        });
+      }
+
+      await tx.reservation.delete({
+        where: { id },
+      });
+    });
+
+    return NextResponse.json({ message: 'Reservation deleted' }, { status: 200 });
+  } catch (error: any) {
+    console.error('Error deleting reservation:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to delete reservation' },
+      { status: error.message?.includes('Unauthorized') ? 403 : 500 }
+    );
+  }
+}
