@@ -46,7 +46,7 @@ export function HeroSection() {
             </h2>
 
             <button className="group flex items-center gap-2 text-lg hover:gap-4 transition-all duration-300">
-              <span>See where we fly</span>
+              <span><a href='#destinations'>See where we fly</a></span>
               <ArrowRight className="w-5 h-5 text-orange-500" />
             </button>
           </motion.div>

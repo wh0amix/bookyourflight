@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.8",
+    "@getbrevo/brevo": "^3.0.1",
     "@prisma/client": "5.22.0",
     "lucide-react": "^0.562.0",
     "motion": "^12.27.3",

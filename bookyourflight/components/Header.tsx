@@ -12,15 +12,15 @@ export function Header() {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4 backdrop-blur-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 px-6 py-0 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/bookyourflight-transp.png"
             alt="BookYourFlight"
-            width={240}
-            height={60}
-            className="h-14 w-auto"
+            width={340}
+            height={360}
+            className="h-20 w-auto"
             priority
           />
         </Link>

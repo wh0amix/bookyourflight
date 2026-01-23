@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
+import { sendEmail, emailTemplates } from '@/lib/email/brevo';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -46,6 +47,12 @@ export async function POST(req: NextRequest) {
           break;
         }
 
+        // Get full reservation and user data
+        const reservation = await prisma.reservation.findUnique({
+          where: { id: payment.reservation.id },
+          include: { user: true, resource: true },
+        });
+
         await prisma.$transaction(async (tx) => {
           const resource = await tx.resource.findUnique({
             where: { id: payment.reservation.resourceId },
@@ -80,6 +87,32 @@ export async function POST(req: NextRequest) {
             },
           });
         });
+
+        // Send confirmation email
+        if (reservation?.user) {
+          const htmlContent = emailTemplates.reservationConfirmation({
+            passengerName: reservation.user.firstName || reservation.user.email,
+            flightName: reservation.resource.name,
+            flightNumber: (reservation.resource.metadata as any)?.flightNumber || 'N/A',
+            origin: (reservation.resource.metadata as any)?.origin || 'N/A',
+            destination: (reservation.resource.metadata as any)?.destination || 'N/A',
+            departureTime: (reservation.resource.metadata as any)?.departureTime || 'N/A',
+            passengerCount: reservation.passengerCount,
+            totalPrice: Number(payment.amount) * 100,
+            reservationId: reservation.id,
+          });
+
+          await sendEmail({
+            to: reservation.user.email,
+            subject: 'Votre réservation est confirmée',
+            htmlContent,
+            type: 'RESERVATION_CONFIRMATION',
+            metadata: {
+              reservationId: reservation.id,
+              userId: reservation.userId,
+            },
+          });
+        }
 
         console.log('Payment processed successfully:', sessionId);
         break;

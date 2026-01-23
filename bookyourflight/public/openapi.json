@@ -1,0 +1,71 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "BookYourFlight API",
+    "description": "API pour la gestion des réservations de vols avec paiements Stripe intégrés",
+    "version": "1.0.0",
+    "contact": {
+      "name": "BookYourFlight Support",
+      "email": "support@bookyourflight.com"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Clerk JWT Token"
+      }
+    }
+  },
+  "paths": {
+    "/api/resources": {
+      "get": {
+        "tags": [
+          "Resources"
+        ],
+        "summary": "Get all available flights",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of flights"
+          }
+        }
+      }
+    }
+  }
+}

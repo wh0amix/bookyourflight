@@ -12,6 +12,7 @@ const isPublicRoute = createRouteMatcher([
   '/reservations/success',
   '/api/webhooks/clerk',
   '/api/webhooks/stripe',
+  '/api/email/test',
 ]);
 
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);

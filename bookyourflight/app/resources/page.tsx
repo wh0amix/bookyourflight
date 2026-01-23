@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ResourceCard } from '@/components/ResourceCard';
 import { Search, Filter } from 'lucide-react';
 import Link from 'next/link';
@@ -17,6 +18,7 @@ interface Resource {
 }
 
 export default function ResourcesPage() {
+  const searchParams = useSearchParams();
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -24,11 +26,37 @@ export default function ResourcesPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [sortBy, setSortBy] = useState('newest');
+  const isInitializingRef = useRef(true);
 
   const limit = 12;
 
+  // Initialize from URL params
   useEffect(() => {
+    const origin = searchParams.get('origin');
+    const destination = searchParams.get('destination');
+
+    if (origin || destination) {
+      const searchQuery = [origin, destination].filter(Boolean).join(' ');
+      console.log('🔍 URL params found:', { origin, destination, searchQuery });
+      setSearch(searchQuery);
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+      isInitializingRef.current = true;
+    } else {
+      isInitializingRef.current = false;
+    }
+  }, [searchParams]);
+
+  // Debounce search input changes (skip for initialization)
+  useEffect(() => {
+    if (isInitializingRef.current) {
+      console.log('🔍 Skipping debounce during initialization');
+      isInitializingRef.current = false;
+      return;
+    }
+
     const timer = setTimeout(() => {
+      console.log('🔍 Setting debounced search:', search);
       setDebouncedSearch(search);
       setPage(1);
     }, 500);
@@ -36,7 +64,9 @@ export default function ResourcesPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
+  // Fetch resources when dependencies change
   useEffect(() => {
+    console.log('🔍 useEffect fetchResources triggered with:', { page, debouncedSearch, sortBy });
     fetchResources();
   }, [page, debouncedSearch, sortBy]);
 
@@ -49,6 +79,7 @@ export default function ResourcesPage() {
         ...(debouncedSearch && { search: debouncedSearch }),
       });
 
+      console.log('🔍 Fetching with params:', params.toString(), 'debouncedSearch:', debouncedSearch);
       const res = await fetch(`/api/resources?${params}`);
 
       if (!res.ok) {

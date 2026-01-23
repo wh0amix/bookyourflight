@@ -1,15 +1,29 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { ArrowRight, Plane, MapPin, Calendar, Users, ChevronDown } from 'lucide-react';
 
 export function SearchBar() {
+  const router = useRouter();
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
   const [guests, setGuests] = useState(1);
   const [departDate, setDepartDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+
+    if (origin) params.set('origin', origin);
+    if (destination) params.set('destination', destination);
+    if (guests) params.set('guests', guests.toString());
+    if (departDate) params.set('departDate', departDate);
+    if (returnDate) params.set('returnDate', returnDate);
+
+    router.push(`/resources?${params.toString()}`);
+  };
 
   return (
     <motion.div
@@ -111,6 +125,7 @@ export function SearchBar() {
 
         {/* Search Button */}
         <motion.button
+          onClick={handleSearch}
           className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-8 py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}

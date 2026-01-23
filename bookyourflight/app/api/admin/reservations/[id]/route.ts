@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth/roles';
+import { sendEmail, emailTemplates } from '@/lib/email/brevo';
 
 export async function PATCH(
   req: NextRequest,
@@ -26,9 +27,18 @@ export async function PATCH(
 
     switch (action) {
       case 'confirm': {
+        console.log('🔵 [ADMIN] Confirmation request for reservation:', id);
+
         if (reservation.status === 'CONFIRMED') {
           return NextResponse.json({ error: 'Already confirmed' }, { status: 400 });
         }
+
+        // Get user data for email
+        const user = await prisma.user.findUnique({
+          where: { id: reservation.userId },
+        });
+
+        console.log('🔵 [ADMIN] User found:', user ? user.email : 'NULL');
 
         await prisma.$transaction(async (tx) => {
           await tx.reservation.update({
@@ -59,6 +69,42 @@ export async function PATCH(
           });
         });
 
+        console.log('🔵 [ADMIN] Transaction completed successfully');
+
+        // Send confirmation email
+        if (user) {
+          console.log('🔵 [ADMIN] Preparing to send email to:', user.email);
+
+          const htmlContent = emailTemplates.reservationConfirmation({
+            passengerName: user.firstName || user.email,
+            flightName: reservation.resource.name,
+            flightNumber: (reservation.resource.metadata as any)?.flightNumber || 'N/A',
+            origin: (reservation.resource.metadata as any)?.origin || 'N/A',
+            destination: (reservation.resource.metadata as any)?.destination || 'N/A',
+            departureTime: (reservation.resource.metadata as any)?.departureTime || 'N/A',
+            passengerCount: reservation.passengerCount,
+            totalPrice: reservation.payment ? Number(reservation.payment.amount) * 100 : 0,
+            reservationId: reservation.id,
+          });
+
+          console.log('🔵 [ADMIN] Email template generated, calling sendEmail()...');
+
+          const emailResult = await sendEmail({
+            to: user.email,
+            subject: 'Votre réservation est confirmée',
+            htmlContent,
+            type: 'RESERVATION_CONFIRMATION',
+            metadata: {
+              reservationId: reservation.id,
+              userId: user.id,
+            },
+          });
+
+          console.log('🔵 [ADMIN] Email send result:', emailResult);
+        } else {
+          console.warn('⚠️ [ADMIN] User not found, cannot send email');
+        }
+
         return NextResponse.json({ message: 'Reservation confirmed' }, { status: 200 });
       }
 
@@ -66,6 +112,11 @@ export async function PATCH(
         if (reservation.status === 'CANCELLED') {
           return NextResponse.json({ error: 'Already cancelled' }, { status: 400 });
         }
+
+        // Get user data for email
+        const user = await prisma.user.findUnique({
+          where: { id: reservation.userId },
+        });
 
         await prisma.$transaction(async (tx) => {
           await tx.reservation.update({
@@ -97,6 +148,27 @@ export async function PATCH(
             });
           }
         });
+
+        // Send cancellation email
+        if (user) {
+          const htmlContent = emailTemplates.reservationCancelled({
+            passengerName: user.firstName || user.email,
+            flightName: reservation.resource.name,
+            reservationId: reservation.id,
+            refundAmount: reservation.payment ? Number(reservation.payment.amount) * 100 : undefined,
+          });
+
+          await sendEmail({
+            to: user.email,
+            subject: 'Votre réservation a été annulée',
+            htmlContent,
+            type: 'RESERVATION_CANCELLED',
+            metadata: {
+              reservationId: reservation.id,
+              userId: user.id,
+            },
+          });
+        }
 
         return NextResponse.json({ message: 'Reservation cancelled' }, { status: 200 });
       }
@@ -130,6 +202,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Reservation not found' }, { status: 404 });
     }
 
+    // Get user data for email before deleting
+    const user = await prisma.user.findUnique({
+      where: { id: reservation.userId },
+    });
+
     await prisma.$transaction(async (tx) => {
       if (reservation.status === 'CONFIRMED') {
         await tx.resource.update({
@@ -146,6 +223,26 @@ export async function DELETE(
         where: { id },
       });
     });
+
+    // Send deletion email
+    if (user) {
+      const htmlContent = emailTemplates.reservationCancelled({
+        passengerName: user.firstName || user.email,
+        flightName: reservation.resource.name,
+        reservationId: reservation.id,
+      });
+
+      await sendEmail({
+        to: user.email,
+        subject: 'Votre réservation a été supprimée',
+        htmlContent,
+        type: 'RESERVATION_CANCELLED',
+        metadata: {
+          reservationId: reservation.id,
+          userId: user.id,
+        },
+      });
+    }
 
     return NextResponse.json({ message: 'Reservation deleted' }, { status: 200 });
   } catch (error: any) {

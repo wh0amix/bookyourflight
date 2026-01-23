@@ -53,16 +53,46 @@ export async function GET(req: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where = search
-      ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { description: { contains: search, mode: 'insensitive' } },
-          ],
-        }
-      : {};
+    let where: any = { isActive: true };
 
-    console.log('🔍 Fetching resources - page:', page, 'limit:', limit, 'search:', search);
+    if (search) {
+      const resources = await prisma.resource.findMany({
+        where: { isActive: true },
+      });
+
+      // Split search terms by space and convert to lowercase
+      const searchTerms = search.toLowerCase().split(/\s+/).filter(Boolean);
+      console.log('🔍 Search terms:', searchTerms);
+
+      const filtered = resources.filter((r) => {
+        const name = r.name?.toLowerCase() || '';
+        const desc = r.description?.toLowerCase() || '';
+        const origin = (r.metadata as any)?.origin?.toLowerCase() || '';
+        const destination = (r.metadata as any)?.destination?.toLowerCase() || '';
+
+        // Check if all search terms match across all fields
+        return searchTerms.every((term) => {
+          return name.includes(term) || desc.includes(term) || origin.includes(term) || destination.includes(term);
+        });
+      });
+
+      const paginatedData = filtered.slice(skip, skip + limit);
+
+      console.log('🔍 Search:', search, 'found:', filtered.length, 'resources');
+
+      return NextResponse.json(
+        {
+          data: paginatedData,
+          total: filtered.length,
+          page,
+          limit,
+          pages: Math.ceil(filtered.length / limit),
+        },
+        { status: 200 }
+      );
+    }
+
+    console.log('🔍 Fetching resources - page:', page, 'limit:', limit);
 
     const [data, total] = await Promise.all([
       prisma.resource.findMany({

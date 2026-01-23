@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe';
+import { sendEmail, emailTemplates } from '@/lib/email/brevo';
 
 export async function GET(req: NextRequest) {
   try {
@@ -33,6 +34,7 @@ export async function GET(req: NextRequest) {
         reservation: {
           include: {
             resource: true,
+            user: true,
           },
         },
       },
@@ -92,6 +94,37 @@ export async function GET(req: NextRequest) {
         },
       });
     });
+
+    // Envoyer l'email de confirmation
+    const user = payment.reservation.user;
+    if (user) {
+      console.log('📧 [VERIFY-PAYMENT] Sending confirmation email to:', user.email);
+
+      const htmlContent = emailTemplates.reservationConfirmation({
+        passengerName: user.firstName || user.email,
+        flightName: payment.reservation.resource.name,
+        flightNumber: (payment.reservation.resource.metadata as any)?.flightNumber || 'N/A',
+        origin: (payment.reservation.resource.metadata as any)?.origin || 'N/A',
+        destination: (payment.reservation.resource.metadata as any)?.destination || 'N/A',
+        departureTime: (payment.reservation.resource.metadata as any)?.departureTime || 'N/A',
+        passengerCount: payment.reservation.passengerCount,
+        totalPrice: Number(payment.amount) * 100,
+        reservationId: payment.reservation.id,
+      });
+
+      const emailResult = await sendEmail({
+        to: user.email,
+        subject: 'Votre réservation est confirmée - BookYourFlight',
+        htmlContent,
+        type: 'RESERVATION_CONFIRMATION',
+        metadata: {
+          reservationId: payment.reservation.id,
+          userId: user.id,
+        },
+      });
+
+      console.log('📧 [VERIFY-PAYMENT] Email result:', emailResult);
+    }
 
     return NextResponse.json(
       {

@@ -1,0 +1,52 @@
+### Test Email Endpoint
+POST http://localhost:3000/api/email/test
+Content-Type: application/json
+
+{
+  "email": "eventflow.ynov@hotmail.com"
+}
+
+### Test Brevo Direct (should work)
+POST https://api.brevo.com/v3/smtp/email
+api-key: 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
+Content-Type: application/json
+
+{
+  "sender": {
+    "name": "BookYourFlight",
+    "email": "eventflow.ynov@hotmail.com"
+  },
+  "to": [
+    {
+      "email": "eventflow.ynov@hotmail.com",
+      "name": "Test User"
+    }
+  ],
+  "subject": "Test Direct Brevo API",
+  "htmlContent": "<h1>Test</h1><p>Direct Brevo API test</p>"
+}
+
+### Get All Reservations (Admin)
+# Remplace YOUR_CLERK_TOKEN par ton token JWT Clerk
+GET http://localhost:3000/api/admin/reservations
+Authorization: Bearer YOUR_CLERK_TOKEN
+
+### Confirm Reservation (Admin)
+# Remplace RESERVATION_ID et YOUR_CLERK_TOKEN
+PATCH http://localhost:3000/api/admin/reservations/RESERVATION_ID
+Content-Type: application/json
+Authorization: Bearer YOUR_CLERK_TOKEN
+
+{
+  "action": "confirm"
+}
+
+### Cancel Reservation (Admin)
+PATCH http://localhost:3000/api/admin/reservations/RESERVATION_ID
+Content-Type: application/json
+Authorization: Bearer YOUR_CLERK_TOKEN
+
+{
+  "action": "cancel",
+  "reason": "Test cancellation"
+}
