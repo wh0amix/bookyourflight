@@ -75,7 +75,7 @@ export default function AdminResourcesPage() {
   const pages = Math.ceil(total / limit);
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
+    <div className="min-h-screen bg-black text-white p-8 pt-20 lg:pt-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-bold">Gestion des Vols</h1>

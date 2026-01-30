@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { getUserRole } from '@/lib/auth/roles';
+import { AdminSidebar } from '@/components/AdminSidebar';
 
 export default async function AdminLayout({
   children,
@@ -19,5 +20,12 @@ export default async function AdminLayout({
     redirect('/error/403');
   }
 
-  return <>{children}</>;
+  return (
+    <div className="flex min-h-screen bg-black">
+      <AdminSidebar />
+      <main className="flex-1 lg:ml-64">
+        {children}
+      </main>
+    </div>
+  );
 }

@@ -99,7 +99,7 @@ export default function AdminBookingsPage() {
   const pages = Math.ceil(total / limit);
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
+    <div className="min-h-screen bg-black text-white p-8 pt-20 lg:pt-8">
       <div className="max-w-7xl mx-auto">
         <Link
           href="/admin/dashboard"

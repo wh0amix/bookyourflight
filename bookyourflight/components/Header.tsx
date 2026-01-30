@@ -4,12 +4,19 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { useUser, useClerk } from '@clerk/nextjs';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 export function Header() {
   const { isSignedIn, user } = useUser();
   const { signOut } = useClerk();
   const [showMenu, setShowMenu] = useState(false);
+  const pathname = usePathname();
+
+  // Hide header on admin routes
+  if (pathname.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-6 py-0 backdrop-blur-sm">

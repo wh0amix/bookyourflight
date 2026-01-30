@@ -41,6 +41,7 @@ export function ResourceForm({ initialData, isEditing = false }: ResourceFormPro
         departureTime: '',
         arrivalTime: '',
         airline: '',
+        imageUrl: '',
       },
     }
   );
@@ -264,6 +265,28 @@ export function ResourceForm({ initialData, isEditing = false }: ResourceFormPro
           }
           className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500"
         />
+
+        <div>
+          <label className="block text-sm font-medium mb-2">URL de l'image</label>
+          <input
+            type="url"
+            placeholder="https://images.unsplash.com/photo-... (optionnel)"
+            value={formData.metadata?.imageUrl || ''}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                metadata: {
+                  ...formData.metadata,
+                  imageUrl: e.target.value,
+                },
+              })
+            }
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500"
+          />
+          <p className="text-xs text-zinc-400 mt-1">
+            Lien vers une image de la destination (ex: Unsplash, Pixabay, etc.)
+          </p>
+        </div>
       </div>
 
       <div className="flex gap-4">

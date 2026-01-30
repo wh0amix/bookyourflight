@@ -43,7 +43,7 @@ export default function EditResourcePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white p-8 flex items-center justify-center">
+      <div className="min-h-screen bg-black text-white p-8 pt-20 lg:pt-8 flex items-center justify-center">
         <p className="text-zinc-400">Chargement...</p>
       </div>
     );
@@ -51,14 +51,14 @@ export default function EditResourcePage() {
 
   if (!resource) {
     return (
-      <div className="min-h-screen bg-black text-white p-8 flex items-center justify-center">
+      <div className="min-h-screen bg-black text-white p-8 pt-20 lg:pt-8 flex items-center justify-center">
         <p className="text-red-400">Vol non trouvé</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
+    <div className="min-h-screen bg-black text-white p-8 pt-20 lg:pt-8">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">Modifier le vol</h1>
         <ResourceForm initialData={resource} isEditing={true} />
